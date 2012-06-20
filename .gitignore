@@ -4,3 +4,13 @@
 /configure
 /autom4te.cache/
 /mass_matrix_2d/Makefile
+/mass_matrix_2d/ufl_rules.mk
+/mass_matrix_2d/benchmark_f?_p?_q?
+/mass_matrix_2d/benchmark_f?_p?_q?.cpp
+/mass_matrix_2d/mass_matrix_f?_p?_q?.cpp
+/mass_matrix_2d/mass_matrix_f?_p?_q?.ufl
+/mass_matrix_2d/mass_matrix_f?_p?_q?_tensor.ufl
+/mass_matrix_2d/mass_matrix_f?_p?_q?_quadrature.ufl
+/mass_matrix_2d/mass_matrix_f?_p?_q?_tensor.h
+/mass_matrix_2d/mass_matrix_f?_p?_q?_quadrature.h
+/mass_matrix_2d/mass_matrix_f?_p?_q?_excafe.h
