@@ -1,0 +1,123 @@
+#include <cassert>
+#include <cassert>
+#include <cmath>
+#include <ufc.h>
+
+// Common sub-expression elimination pass took 0 minutes and 0.43 seconds (wall clock).
+
+class ExcafeCellIntegral_0 : public ufc::cell_integral
+{
+public:
+  void tabulate_tensor(double* const A, const double* const* w, const ufc::cell& c) const
+  {
+    const double * const * x = c.coordinates;
+
+    const double var_0 = -1.0000000000000000000000000*x[0][1];
+    const double var_1 = x[1][1] + var_0;
+    const double var_2 = -1.0000000000000000000000000*x[0][0];
+    const double var_3 = x[2][0] + var_2;
+    const double var_4 = var_0 + x[2][1];
+    const double var_5 = x[1][0] + var_2;
+    const double var_6 = var_4*var_5 + -1.0000000000000000000000000*var_1*var_3;
+    const double var_7 = std::abs(var_6);
+    const double var_8 = w[0][1]*w[1][0] + w[0][0]*w[1][1];
+    const double var_9 = w[0][1]*w[1][2] + w[0][2]*w[1][1];
+    const double var_10 = var_8 + var_9;
+    const double var_11 = w[0][1]*w[1][1];
+    const double var_12 = w[0][2]*w[1][0] + w[0][0]*w[1][2];
+    const double var_13 = w[0][0]*w[1][0];
+    const double var_14 = w[0][2]*w[1][2];
+    const double var_15 = var_14 + var_13;
+    const double var_16 = 0.5000000000000000000000000*var_15 + 0.3333333333333333148296163*var_12;
+    const double var_17 = 0.5000000000000000000000000*var_10 + var_16 + var_11;
+    A[23] = 0.0095238095238095246686250*var_17*var_7;
+    A[33] = A[23];
+    const double var_18 = var_14 + var_11;
+    const double var_19 = 0.3333333333333333148296163*var_9 + 0.5000000000000000000000000*var_18;
+    const double var_20 = var_8 + var_12;
+    const double var_21 = 0.1666666666666666574148081*var_20;
+    const double var_22 = var_19 + var_21;
+    A[3] = -0.0047619047619047623343125*var_22*var_7;
+    A[18] = A[3];
+    const double var_23 = -1.0000000000000000000000000*var_8 + var_14;
+    const double var_24 = -0.1666666666666666574148081*var_8 + var_14;
+    const double var_25 = 0.0047619047619047623343125*var_24*var_7;
+    const double var_26 = -0.0023809523809523811671562*var_13*var_7;
+    const double var_27 = -0.0007936507936507936501053*var_11*var_7;
+    A[16] = var_25 + var_26 + var_27;
+    A[26] = A[16];
+    const double var_28 = 0.1666666666666666574148081*var_10;
+    const double var_29 = var_28 + 0.6666666666666666296592325*var_15 + 0.1111111111111111049432054*w[0][1]*w[1][1] + 0.5000000000000000000000000*var_12;
+    A[28] = 0.0285714285714285705364279*var_29*var_7;
+    const double var_30 = var_11 + var_13;
+    const double var_31 = 0.3333333333333333148296163*var_23 + -1.0000000000000000000000000*var_30;
+    A[1] = 0.0011904761904761905835781*var_31*var_7;
+    A[6] = A[1];
+    const double var_32 = -0.1666666666666666574148081*var_9 + var_13;
+    const double var_33 = 0.0047619047619047623343125*var_32*var_7;
+    const double var_34 = 0.0833333333333333287074041*var_15 + 0.1250000000000000000000000*var_10 + 0.0416666666666666643537020*var_12 + var_11;
+    const double var_35 = -0.0023809523809523811671562*var_11*var_7;
+    const double var_36 = -0.0007936507936507936501053*var_14*var_7;
+    A[5] = var_33 + var_35 + var_36;
+    const double var_37 = 0.3333333333333333148296163*var_8 + 0.5000000000000000000000000*var_30;
+    const double var_38 = var_12 + var_9;
+    const double var_39 = 0.1666666666666666574148081*var_38;
+    const double var_40 = var_37 + var_39;
+    A[17] = -0.0047619047619047623343125*var_40*var_7;
+    A[32] = A[17];
+    A[7] = 0.0095238095238095246686250*var_34*var_7;
+    const double var_41 = 0.5000000000000000000000000*var_8 + 0.1111111111111111049432054*w[0][2]*w[1][2] + 0.6666666666666666296592325*var_30 + var_39;
+    A[35] = 0.0285714285714285705364279*var_41*var_7;
+    const double var_42 = var_28 + var_16;
+    const double var_43 = -0.0023809523809523811671562*var_14*var_7;
+    const double var_44 = 0.0416666666666666643537020*var_9 + var_13 + 0.0833333333333333287074041*var_18 + 0.1250000000000000000000000*var_20;
+    A[0] = 0.0095238095238095246686250*var_44*var_7;
+    A[30] = A[5];
+    const double var_45 = -0.1666666666666666574148081*var_12 + var_11;
+    const double var_46 = 0.0047619047619047623343125*var_45*var_7;
+    A[11] = var_46 + var_26 + var_36;
+    const double var_47 = 0.5000000000000000000000000*var_38 + var_37 + var_14;
+    A[22] = 0.0095238095238095246686250*var_47*var_7;
+    const double var_48 = -1.0000000000000000000000000*var_9 + var_13;
+    const double var_49 = 0.3333333333333333148296163*var_48 + -1.0000000000000000000000000*var_18;
+    const double var_50 = -0.0007936507936507936501053*var_13*var_7;
+    A[15] = var_50 + var_25 + var_35;
+    A[20] = A[15];
+    const double var_51 = 0.1111111111111111049432054*w[0][0]*w[1][0] + 0.5000000000000000000000000*var_9 + var_21 + 0.6666666666666666296592325*var_18;
+    A[21] = 0.0285714285714285705364279*var_51*var_7;
+    const double var_52 = var_19 + 0.5000000000000000000000000*var_20 + var_13;
+    A[29] = 0.0095238095238095246686250*var_52*var_7;
+    A[34] = A[29];
+    const double var_53 = -1.0000000000000000000000000*var_12 + var_11;
+    const double var_54 = -1.0000000000000000000000000*var_15 + 0.3333333333333333148296163*var_53;
+    A[9] = var_50 + var_46 + var_43;
+    const double var_55 = 0.0416666666666666643537020*var_8 + 0.1250000000000000000000000*var_38 + var_14 + 0.0833333333333333287074041*var_30;
+    A[4] = var_33 + var_27 + var_43;
+    A[8] = 0.0011904761904761905835781*var_49*var_7;
+    A[24] = A[4];
+    A[31] = A[11];
+    A[10] = -0.0047619047619047623343125*var_42*var_7;
+    A[2] = 0.0011904761904761905835781*var_54*var_7;
+    A[13] = A[8];
+    A[19] = A[9];
+    A[14] = 0.0095238095238095246686250*var_55*var_7;
+    A[27] = A[22];
+    A[12] = A[2];
+    A[25] = A[10];
+  }
+
+  void tabulate_tensor(double* const A,
+                       const double* const* w,
+                       const ufc::cell& c,
+                       unsigned int num_quadrature_points,
+                       const double* const* quadrature_points,
+                       const double* quadrature_weights) const
+  {
+    assert(0 && "This function is not implemented!");
+  }
+};
+
+extern "C" ufc::cell_integral* newExcafeCellIntegral_0()
+{
+  return new ExcafeCellIntegral_0();
+}
