@@ -34,3 +34,4 @@ clean:
 	rm -f *.py ${CLEAN_FILES}
 
 .PHONY: default tractable-benchmarks all-benchmarks clean
+.SECONDARY: ${INTERMEDIATES}
