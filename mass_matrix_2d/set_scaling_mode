@@ -1,0 +1,17 @@
+#!/bin/bash
+set -e
+
+if [ "$1" == "" ]; then
+  echo "Please specify governor." >&2
+  exit 1
+fi
+
+GOV="$1"
+
+sudo -v
+for CPU_GOV in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+  echo "Setting for ${CPU_GOV}..."
+  echo ${GOV} | sudo tee ${CPU_GOV} > /dev/null;
+done
+
+echo "Done."

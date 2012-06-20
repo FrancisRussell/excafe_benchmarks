@@ -1,0 +1,72 @@
+#!/usr/bin/perl
+use strict;
+use encoding "utf-8";
+
+if ($#ARGV == -1)
+{
+  print "Please supply an object file.\n";
+  exit 1;
+}
+
+if (not -e $ARGV[0])
+{
+  print "Cannot find file \"$ARGV[0].\n\"";
+  exit 1;
+}
+
+open(ASM_DUMP, "objdump -C --section=.text -d $ARGV[0] |");
+
+my $implementation = "none";
+my %stats = ();
+
+while(my $line = <ASM_DUMP>)
+{
+  if ($implementation ne "none" and $line =~ m/((add|sub|mul|div|rcp|sqrt|rsqrt|max|min)(s|p)(s|d))/)
+  {
+    ++$stats{$implementation}{$1};
+  }
+
+  if ($line =~ m/^$/)
+  {
+    $implementation = "none";
+  }
+
+  if ($line =~ m/^[[:xdigit:]]+ <(.*)::tabulate_tensor\(double\*, double const\* const\*, ufc::cell const&\) const>:/)
+  {
+    $implementation = $1;
+
+    if ($implementation =~ m/quadrature/i)
+    {
+      # Pointless since we do not handle loops.
+      $implementation = "none";
+    }
+    elsif ($implementation =~ m/tensor/i)
+    {
+      $implementation = "Tensor Contraction";
+    }
+    elsif ($implementation =~ m/excafe/i)
+    {
+      $implementation = "Excafé";
+    }
+  }
+}
+
+print "$ARGV[0]:\n";
+
+foreach $implementation (keys %stats)
+{
+  print "$implementation:\n";
+
+  my $itype;
+  my $total = 0;
+
+  foreach $itype (keys %{$stats{$implementation}})
+  {
+    my $count = $stats{$implementation}{$itype};
+    $total += $count;
+    print "\t$itype: $count\n"
+  }
+  print "\tTotal: $total\n";
+
+  print "\n";
+}

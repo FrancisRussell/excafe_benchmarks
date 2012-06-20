@@ -1,0 +1,317 @@
+#include <vector>
+#include <cassert>
+#include <sstream>
+#include <iostream>
+#include <iomanip>
+#include <boost/foreach.hpp>
+#include <boost/scoped_ptr.hpp>
+#include <boost/scoped_array.hpp>
+#include <boost/preprocessor/stringize.hpp>
+#include <boost/preprocessor/cat.hpp>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_real.hpp>
+#include <boost/random/variate_generator.hpp>
+#include <boost/random/uniform_on_sphere.hpp>
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
+#include <boost/accumulators/statistics/median.hpp>
+#include <boost/cstdint.hpp>
+#include <ufc.h>
+#include <papi.h>
+
+#define COMMON_NAME(nf, p, q, rep) X_COMMON_NAME(nf, p, q, rep)
+#define X_COMMON_NAME(nf, p, q, rep) mass_matrix_f ## nf ## _p ## p ## _q ## q ## _ ## rep
+
+`#'define COMMON_NAME_TENSOR     COMMON_NAME(NF_VALUE, P_VALUE, Q_VALUE, tensor)
+`#'define COMMON_NAME_QUADRATURE COMMON_NAME(NF_VALUE, P_VALUE, Q_VALUE, quadrature)
+`#'define COMMON_NAME_EXCAFE     COMMON_NAME(NF_VALUE, P_VALUE, Q_VALUE, excafe)
+
+#define HEADER_TENSOR     BOOST_PP_STRINGIZE(COMMON_NAME_TENSOR.h)
+#define HEADER_QUADRATURE BOOST_PP_STRINGIZE(COMMON_NAME_QUADRATURE.h)
+#define HEADER_EXCAFE     BOOST_PP_STRINGIZE(COMMON_NAME_EXCAFE.h)
+
+#define CELL_INTEGRAL_TENSOR     BOOST_PP_CAT(COMMON_NAME_TENSOR, _cell_integral_0_0)
+#define CELL_INTEGRAL_QUADRATURE BOOST_PP_CAT(COMMON_NAME_QUADRATURE, _cell_integral_0_0)
+#define CELL_INTEGRAL_EXCAFE     ExcafeCellIntegral_0
+
+#include HEADER_TENSOR
+#include HEADER_QUADRATURE
+#include HEADER_EXCAFE
+
+static const ufc::shape CELL_SHAPE    = ufc::triangle;
+static const int        CELL_VERTICES = 3;
+
+namespace accum = boost::accumulators;
+
+
+int dofsPerField(const int degree)
+{
+  assert(degree >= 1);
+
+  int dofs = 0;
+  for(int m=0; m<degree+1; ++m)
+    for(int n=0; m+n<degree+1; ++n)
+      ++dofs;
+
+  return dofs;
+}
+
+void checkPAPI(const int value)
+{
+  if (value != PAPI_OK)
+  {
+    std::cerr << "PAPI returned error code " << value << ": " << PAPI_strerror(value) << std::endl;
+    exit(EXIT_FAILURE);
+  }
+}
+
+class FLOPCounter
+{
+private:
+  typedef accum::accumulator_set<double, accum::stats<accum::tag::mean> > timing_set;
+  timing_set realTime, processTime;
+  double tMFlops;
+  float iRealTime, iProcessTime, iMFlops;
+  long long iOps, tOps;
+  long runs;
+
+public:
+  FLOPCounter() : 
+    tMFlops(0.0),
+    iRealTime(0.0), iProcessTime(0.0), iMFlops(0.0), 
+    iOps(0), tOps(0), runs(0)
+  {
+  }
+
+  void start()
+  {
+    checkPAPI(PAPI_flops(&iRealTime, &iProcessTime, &iOps, &iMFlops));
+  }
+
+  void stop()
+  {
+    float fRealTime, fProcessTime, fMFlops;
+    long long fOps;
+
+    checkPAPI(PAPI_flops(&fRealTime, &fProcessTime, &fOps, &fMFlops));
+    processTime(fProcessTime - iProcessTime);
+    realTime(fRealTime - iRealTime);
+    tMFlops += fMFlops - iMFlops;
+    tOps += fOps - iOps;
+
+    ++runs;
+  }
+
+  long long getOps() const
+  {
+    return tOps/runs;
+  }
+
+  double getProcessTime() const
+  {
+    return accum::mean(processTime);
+  }
+
+  double getRealTime() const
+  {
+    return accum::mean(realTime);
+  }
+
+  long getRuns() const
+  {
+    return runs;
+  }
+};
+
+class IntegralContext
+{
+private:
+  const std::size_t coefficients;
+  const std::size_t dofsPerCoefficient;
+  int dimension;
+  int vertices;
+  boost::mt19937 rng;
+  ufc::cell   cell;
+
+  boost::scoped_array<double> coefficientData;
+  boost::scoped_array<double*> coefficientPointers;
+  boost::scoped_array<double> vertexData;
+  boost::scoped_array<double*> vertexPointers;
+
+  void initCoefficientData()
+  {
+    coefficientData.reset(new double[coefficients*dofsPerCoefficient]);
+    coefficientPointers.reset(new double*[coefficients]);
+
+    for(std::size_t coefficient=0; coefficient<coefficients; ++coefficient)
+      coefficientPointers[coefficient] = &coefficientData[coefficient*dofsPerCoefficient];
+  }
+
+  void initCellData(const ufc::shape shape)
+  {
+    switch(shape)
+    {
+      case ufc::triangle:
+      {
+        dimension = 2;
+        vertices = 3;
+        break;
+      }
+      default:
+      {
+        std::cerr << "Unimplemented cell shape." << std::endl;
+        exit(EXIT_FAILURE);
+      }
+    }
+
+    vertexData.reset(new double[dimension * vertices]);
+    vertexPointers.reset(new double*[vertices]);
+
+    for(std::size_t v=0; v<vertices; ++v)
+      vertexPointers[v] = &vertexData[v*dimension];
+
+    cell.cell_shape = shape;
+    cell.entity_indices = NULL;
+    cell.topological_dimension = dimension;
+    cell.geometric_dimension = dimension;
+    cell.coordinates = vertexPointers.get();
+  }
+
+public:
+  IntegralContext(const std::size_t _coefficients, 
+                  const std::size_t _dofsPerCoefficient,
+                  const ufc::shape _shape) :
+    coefficients(_coefficients), dofsPerCoefficient(_dofsPerCoefficient)
+  {
+    initCoefficientData();
+    initCellData(_shape);
+  }
+
+  void seed(const uint32_t value)
+  {
+    rng.seed(value);
+  }
+
+  void randomise()
+  {
+    typedef boost::uniform_real<> coeff_distribution_type;
+    typedef boost::variate_generator<boost::mt19937&, coeff_distribution_type> coeff_gen_type;
+    coeff_gen_type coefficientGenerator(rng, coeff_distribution_type(-1.0, 1.0));
+
+    for(std::size_t i=0; i<coefficients*dofsPerCoefficient; ++i)
+      coefficientData[i] = coefficientGenerator();
+
+    typedef boost::uniform_on_sphere<double> vertex_distribution_type;
+    typedef boost::variate_generator<boost::mt19937&, vertex_distribution_type> vertex_gen_type;
+    vertex_gen_type vertexGenerator(rng, vertex_distribution_type());
+
+    for(std::size_t v=0; v<vertices; ++v)
+    {
+      const std::vector<double> vertex = vertexGenerator();
+      std::copy(vertex.begin(), vertex.end(), &vertexData[v*dimension]);
+    }
+  }
+
+  void evaluate(const ufc::cell_integral& cellIntegral, double* const data) {
+    cellIntegral.tabulate_tensor(data, coefficientPointers.get(), cell);
+  }
+};
+
+
+void dump(const std::vector<double>& v)
+{
+  for(std::size_t i=0; i<v.size(); ++i)
+    std::cout << v[i] << (i+1 < v.size() ? ", " : "");
+
+  std::cout << std::endl;
+}
+
+void printStatistics(const FLOPCounter& counter, const std::string& variant, const std::size_t batchSize)
+{
+  std::cout << std::fixed << std::setprecision(0);
+  std::cout << "Total floating point operations (" << variant << "): " << counter.getOps()/batchSize << std::endl;
+  std::cout << "Execution time (" << variant << "): " << counter.getProcessTime()*1.0e9/batchSize << " us" << std::endl;
+  std::cout << "Runs: " << counter.getRuns() << std::endl;
+}
+
+int main()
+{
+  static const int pDofs = dofsPerField(P_VALUE);
+  static const int qDofs = dofsPerField(Q_VALUE);
+
+  // Setup coefficient data
+  IntegralContext context(NF_VALUE, pDofs, ufc::triangle);
+  context.seed(42);
+  context.randomise();
+
+  // Setup result data
+  std::vector<double> qOut(qDofs * qDofs);
+  std::vector<double> tOut(qDofs * qDofs);
+  std::vector<double> eOut(qDofs * qDofs);
+
+  // Setup cell data
+  boost::scoped_ptr<ufc::cell_integral> cellIntegralTensor(new CELL_INTEGRAL_TENSOR());
+  boost::scoped_ptr<ufc::cell_integral> cellIntegralQuadrature(new CELL_INTEGRAL_QUADRATURE());
+  boost::scoped_ptr<ufc::cell_integral> cellIntegralExcafe(new CELL_INTEGRAL_EXCAFE());
+
+  const std::size_t batchSize = 100 * 1000;
+  const long operations = 1000 * 1000 * 1000;
+  FLOPCounter qCounter, tCounter, eCounter;
+  
+  do
+  {
+    qCounter.start();
+    for(std::size_t i=0; i<batchSize; ++i)
+      context.evaluate(*cellIntegralQuadrature, &qOut[0]);
+    qCounter.stop();
+  }
+  while(qCounter.getOps() * qCounter.getRuns() < operations);
+
+  do
+  {
+    tCounter.start();
+    for(std::size_t i=0; i<batchSize; ++i)
+      context.evaluate(*cellIntegralTensor, &tOut[0]);
+    tCounter.stop();
+  }
+  while(tCounter.getOps() * tCounter.getRuns() < operations);
+
+  do
+  {
+    eCounter.start();
+    for(std::size_t i=0; i<batchSize; ++i)
+      context.evaluate(*cellIntegralExcafe, &eOut[0]);
+    eCounter.stop();
+  }
+  while(eCounter.getOps() * eCounter.getRuns() < operations);
+
+  printStatistics(qCounter, "quadrature", batchSize);
+  printStatistics(tCounter, "tensor", batchSize);
+  printStatistics(eCounter, "Excafe", batchSize);
+
+  const double flopsImprovement = static_cast<double>(std::min(qCounter.getOps(), tCounter.getOps()))/eCounter.getOps();
+  const double timeImprovement = static_cast<double>(std::min(qCounter.getProcessTime(),
+    tCounter.getProcessTime()))/eCounter.getProcessTime();
+
+  std::cout << std::endl;
+  std::cout << std::fixed << std::setprecision(2);
+  std::cout << "Improvement (flops): " << flopsImprovement << std::endl;
+  std::cout << "Improvement (execution time): " << timeImprovement << std::endl;
+
+  double excafeNormSq = 0.0;
+  double tensorNormSq = 0.0;
+  for(std::size_t i=0; i<qOut.size(); ++i)
+  {
+    const double excafeDifference = qOut[i] - eOut[i]; 
+    excafeNormSq += excafeDifference*excafeDifference;
+
+    const double tensorDifference = qOut[i] - tOut[i]; 
+    tensorNormSq += tensorDifference*tensorDifference;
+  }
+
+  std::cout << std::endl;
+  std::cout << std::scientific << std::setprecision(5);
+  std::cout << "L2-norm between quadrature and Excafe: " << std::sqrt(excafeNormSq) << std::endl;
+  std::cout << "L2-norm between quadrature and tensor: " << std::sqrt(tensorNormSq) << std::endl;
+}

@@ -1,0 +1,89 @@
+#!/bin/bash
+set -e
+
+BENCHMARK_NAME="benchmark"
+TIME_FILE="$(mktemp)"
+trap "rm -f ${TIME_FILE}" EXIT HUP INT QUIT TERM
+
+FLOPS_PREFIX="Total floating point operations "
+TIME_PREFIX="Execution time "
+
+NP=3
+NQ=4
+NF=4
+
+BENCHMARK_OUTPUT="$(./${BENCHMARK_NAME}_f1_p1_q1)"
+if $(echo echo ${BENCHMARK_OUTPUT} | grep GNU > /dev/null); then
+  COMPILER="gcc"
+elif $(echo echo ${BENCHMARK_OUTPUT} | grep Intel > /dev/null); then
+  COMPILER="icc"
+else
+  COMPILER="unknown"
+fi
+
+echo "\newcommand{\massmatrixtwodresults${COMPILER}flops}{"
+echo -n '\begin{tabularx}{1.1\textwidth}{c|' | tee -a ${TIME_FILE}
+for F in $(seq 1 ${NF}); do
+  echo -n 'XXXX|' | tee -a ${TIME_FILE}
+done
+echo '}' | tee -a ${TIME_FILE}
+
+NUM_COLUMNS=$((4*${NF}+1))
+echo "\\cline{2-${NUM_COLUMNS}}" | tee -a ${TIME_FILE}
+for F in $(seq 1 ${NF}); do
+  echo -n "& \\multicolumn{4}{c|}{\$n_f=${F}$} " | tee -a ${TIME_FILE}
+done
+echo '\\' | tee -a ${TIME_FILE}
+
+echo "\\cline{2-${NUM_COLUMNS}}" | tee -a ${TIME_FILE}
+
+for F in $(seq 1 ${NF}); do
+  echo -n '& Q & T & E & B/E ' | tee -a ${TIME_FILE}
+done
+echo '\\' | tee -a ${TIME_FILE}
+
+echo '\hline' | tee -a ${TIME_FILE}
+
+for P in $(seq 1 ${NP}); do
+  for Q in $(seq 1 ${NQ}); do
+    echo -n "\\multicolumn{1}{|c|}{\$p=${P},q=${Q}\$} " | tee -a ${TIME_FILE}
+    for F in $(seq 1 ${NF}); do
+      BENCHMARK="./${BENCHMARK_NAME}_f${F}_p${P}_q${Q}"
+      if [ -f ${BENCHMARK} ]; then
+        BENCHMARK_OUTPUT="$(${BENCHMARK})"
+        Q_FLOPS=$(echo ${BENCHMARK_OUTPUT} | grep -Eo "${FLOPS_PREFIX}\(quadrature\): [0-9]+" | grep -Eo "[0-9]+")
+        T_FLOPS=$(echo ${BENCHMARK_OUTPUT} | grep -Eo "${FLOPS_PREFIX}\(tensor\): [0-9]+"     | grep -Eo "[0-9]+")
+        E_FLOPS=$(echo ${BENCHMARK_OUTPUT} | grep -Eo "${FLOPS_PREFIX}\(Excafe\): [0-9]+"     | grep -Eo "[0-9]+")
+        FLOPS_SPEEDUP=$(echo ${BENCHMARK_OUTPUT} | grep -Eo "Improvement \(flops\): [0-9.]+" | grep -Eo "[0-9.]+")
+
+        Q_TIME=$(echo ${BENCHMARK_OUTPUT} | grep -Eo "${TIME_PREFIX}\(quadrature\): [0-9]+" | grep -Eo "[0-9]+")
+        T_TIME=$(echo ${BENCHMARK_OUTPUT} | grep -Eo "${TIME_PREFIX}\(tensor\): [0-9]+"     | grep -Eo "[0-9]+")
+        E_TIME=$(echo ${BENCHMARK_OUTPUT} | grep -Eo "${TIME_PREFIX}\(Excafe\): [0-9]+"     | grep -Eo "[0-9]+")
+        TIME_SPEEDUP=$(echo ${BENCHMARK_OUTPUT} | grep -Eo "Improvement \(execution time\): [0-9.]+" | grep -Eo "[0-9.]+")
+
+        if [ $(echo "${FLOPS_SPEEDUP}>1" | bc) -eq 1 ]; then
+          FLOPS_SPEEDUP="\\mathbf{${FLOPS_SPEEDUP}}"
+        fi
+
+        if [ $(echo "${TIME_SPEEDUP}>1" | bc) -eq 1 ]; then
+          TIME_SPEEDUP="\\mathbf{${TIME_SPEEDUP}}"
+        fi
+
+        echo -n "& \$${Q_FLOPS}\$ & \$${T_FLOPS}\$ & \$${E_FLOPS}\$ & \$${FLOPS_SPEEDUP}\$ "
+        echo -n "& \$${Q_TIME}\$ & \$${T_TIME}\$ & \$${E_TIME}\$ & \$${TIME_SPEEDUP}\$ " >> ${TIME_FILE}
+      else
+        echo -n "& - & - & - & - " | tee -a ${TIME_FILE}
+      fi
+
+    done
+    echo '\\' | tee -a ${TIME_FILE}
+  done
+  echo '\hline' | tee -a ${TIME_FILE}
+done
+
+echo '\end{tabularx}' | tee -a ${TIME_FILE}
+echo "}"
+
+echo "\newcommand{\massmatrixtwodresults${COMPILER}times}{"
+cat ${TIME_FILE}
+echo "}"

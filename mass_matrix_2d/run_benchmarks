@@ -1,0 +1,2 @@
+#!/bin/sh
+for x in benchmark_??_??_??; do echo ${x}; ./${x}; echo; done | grep -E "(^$|Total|^benchmark|^Execution|^Improvement)"

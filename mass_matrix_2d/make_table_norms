@@ -1,0 +1,61 @@
+#!/bin/bash
+set -e
+
+BENCHMARK_NAME="benchmark"
+trap "rm -f ${TIME_FILE}" EXIT HUP INT QUIT TERM
+
+NORM_PREFIX="L2-norm between quadrature and"
+
+NP=3
+NQ=4
+NF=4
+
+echo '\newcommand{\massmatrixtwodresultsnorms}{'
+echo -n '\begin{tabularx}{1.1\textwidth}{c|'
+for F in $(seq 1 ${NF}); do
+  echo -n 'XX|'
+done
+echo '}'
+
+NUM_COLUMNS=$((2*${NF}+1))
+echo "\\cline{2-${NUM_COLUMNS}}"
+for F in $(seq 1 ${NF}); do
+  echo -n "& \\multicolumn{2}{c|}{\$n_f=${F}$} "
+done
+echo '\\'
+
+echo "\\cline{2-${NUM_COLUMNS}}"
+
+for F in $(seq 1 ${NF}); do
+  echo -n '& \excafe & Tensor'
+done
+echo '\\'
+
+echo '\hline'
+
+for P in $(seq 1 ${NP}); do
+  for Q in $(seq 1 ${NQ}); do
+    echo -n "\\multicolumn{1}{|c|}{\$p=${P},q=${Q}\$} "
+    for F in $(seq 1 ${NF}); do
+      BENCHMARK="./${BENCHMARK_NAME}_f${F}_p${P}_q${Q}"
+      if [ -f ${BENCHMARK} ]; then
+        BENCHMARK_OUTPUT="$(${BENCHMARK})"
+        E_ACCURACY=$(echo ${BENCHMARK_OUTPUT} | grep -Eo "${NORM_PREFIX} Excafe: [-0-9.e]+" | grep -Eo "[0-9.]+e-?[0-9]+")
+        T_ACCURACY=$(echo ${BENCHMARK_OUTPUT} | grep -Eo "${NORM_PREFIX} tensor: [-0-9.e]+" | grep -Eo "[0-9.]+e-?[0-9]+")
+
+        E_ACCURACY=$(wcalc --quiet -E -P2 ${E_ACCURACY})
+        T_ACCURACY=$(wcalc --quiet -E -P2 ${T_ACCURACY})
+
+        echo -n "& ${E_ACCURACY} & ${T_ACCURACY} "
+      else
+        echo -n "& - & - "
+      fi
+
+    done
+    echo '\\'
+  done
+  echo '\hline'
+done
+
+echo '\end{tabularx}'
+echo "}"
