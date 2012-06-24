@@ -2,6 +2,7 @@
 set -e
 
 BENCHMARK_NAME="benchmark"
+NAME="$(basename $(pwd) | sed s/_//g | sed s/2/two/g)"
 TIME_FILE="$(mktemp)"
 trap "rm -f ${TIME_FILE}" EXIT HUP INT QUIT TERM
 
@@ -21,7 +22,7 @@ else
   COMPILER="unknown"
 fi
 
-echo "\newcommand{\massmatrixtwodresults${COMPILER}flops}{"
+echo "\newcommand{\\${NAME}results${COMPILER}flops}{"
 echo -n '\begin{tabularx}{1.1\textwidth}{c|' | tee -a ${TIME_FILE}
 for F in $(seq 1 ${NF}); do
   echo -n 'XXXX|' | tee -a ${TIME_FILE}
@@ -84,6 +85,6 @@ done
 echo '\end{tabularx}' | tee -a ${TIME_FILE}
 echo "}"
 
-echo "\newcommand{\massmatrixtwodresults${COMPILER}times}{"
+echo "\newcommand{\\${NAME}results${COMPILER}times}{"
 cat ${TIME_FILE}
 echo "}"

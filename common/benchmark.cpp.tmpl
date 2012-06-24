@@ -27,7 +27,7 @@
 #include <papi.h>
 
 #define COMMON_NAME(nf, p, q, rep) X_COMMON_NAME(nf, p, q, rep)
-#define X_COMMON_NAME(nf, p, q, rep) mass_matrix_f ## nf ## _p ## p ## _q ## q ## _ ## rep
+`#'define X_COMMON_NAME(nf, p, q, rep) MAT_TYPE ## _f ## nf ## _p ## p ## _q ## q ## _ ## rep
 
 `#'define COMMON_NAME_TENSOR     COMMON_NAME(NF_VALUE, P_VALUE, Q_VALUE, tensor)
 `#'define COMMON_NAME_QUADRATURE COMMON_NAME(NF_VALUE, P_VALUE, Q_VALUE, quadrature)

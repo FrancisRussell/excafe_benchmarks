@@ -1,18 +1,5 @@
-default: tractable-benchmarks
-
-include ./ufl_rules.mk
-
-ufl_rules.mk: generate_ufl_rules.sh
-	./$^ > $@ 
-
-EXCAFE_LOCATION=${HOME}/excafe
-MASS_MATRIX_2D_GENERATOR=${EXCAFE_LOCATION}/mass_matrix_generator_2d/generator
-
-CXXFLAGS=@CXXFLAGS@
-LDFLAGS=@LDFLAGS@
-
-CXXFLAGS+= @BOOST_CPPFLAGS@ -I../ufc -O3
-LDFLAGS+= @BOOST_LDFLAGS@ @BOOST_SERIALIZATION_LIB@ @APR1_LIBS@ -lm -lpapi
+MAT_TYPE="laplacian"
+include ../benchmark.mk
 
 tractable-benchmarks: benchmark_f1_p1_q1 benchmark_f1_p2_q3 \
 benchmark_f2_p1_q1 benchmark_f2_p2_q3 benchmark_f3_p1_q1 \
@@ -27,11 +14,3 @@ benchmark_f2_p2_q1 benchmark_f2_p3_q3 benchmark_f3_p2_q1 \
 benchmark_f4_p1_q4 benchmark_f1_p2_q2 benchmark_f1_p3_q4 \
 benchmark_f2_p2_q2 benchmark_f2_p3_q4 benchmark_f3_p2_q2 \
 benchmark_f4_p2_q1
-
-all-benchmarks: ${ALL_EXECUTABLES}
-
-clean:
-	rm -f *.py ${CLEAN_FILES}
-
-.PHONY: default tractable-benchmarks all-benchmarks clean
-.SECONDARY: ${INTERMEDIATES}

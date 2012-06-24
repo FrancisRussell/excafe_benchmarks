@@ -1,0 +1,9 @@
+element   = FiniteElement("Lagrange", "triangle", Q_VALUE)
+element_f = FiniteElement("Lagrange", "triangle", P_VALUE)
+
+v = TestFunction(element)
+u = TrialFunction(element)
+
+f = Coefficient(element_f)
+
+a = f*dot(grad(v), grad(u))*dx

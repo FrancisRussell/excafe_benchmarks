@@ -1,0 +1,23 @@
+default: tractable-benchmarks
+
+include ./ufl_rules.mk
+
+ufl_rules.mk: ../common/generate_ufl_rules.sh
+	./$^ ${MAT_TYPE} > $@ 
+
+EXCAFE_LOCATION=${HOME}/excafe
+MASS_MATRIX_2D_GENERATOR=${EXCAFE_LOCATION}/mass_matrix_generator_2d/generator
+
+CXXFLAGS=@CXXFLAGS@
+LDFLAGS=@LDFLAGS@
+
+CXXFLAGS+= @BOOST_CPPFLAGS@ -I../ufc -O3
+LDFLAGS+= @BOOST_LDFLAGS@ @BOOST_SERIALIZATION_LIB@ @APR1_LIBS@ -lm -lpapi
+
+all-benchmarks: ${ALL_EXECUTABLES}
+
+clean:
+	rm -f *.py ${CLEAN_FILES}
+
+.PHONY: default tractable-benchmarks all-benchmarks clean
+.SECONDARY: ${INTERMEDIATES}
