@@ -2,6 +2,7 @@
 set -e
 
 BENCHMARK_NAME="benchmark"
+NAME="$(basename $(pwd) | sed s/_//g | sed s/2/two/g)"
 trap "rm -f ${TIME_FILE}" EXIT HUP INT QUIT TERM
 
 NORM_PREFIX="L2-norm between quadrature and"
@@ -10,7 +11,7 @@ NP=3
 NQ=4
 NF=4
 
-echo '\newcommand{\massmatrixtwodresultsnorms}{'
+echo "\\newcommand{\\${NAME}resultsnorms}{"
 echo -n '\begin{tabularx}{1.1\textwidth}{c|'
 for F in $(seq 1 ${NF}); do
   echo -n 'XX|'
