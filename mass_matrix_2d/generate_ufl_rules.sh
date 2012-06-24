@@ -48,7 +48,7 @@ for NF in 1 2 3 4; do
       EXCAFE_HEADER="mass_matrix_${OPTIONS}_excafe.h"
       EXCAFE_BUILT_SOURCES="${EXCAFE_HEADER}"
       ${ECHO} "${EXCAFE_HEADER}:"
-      ${ECHO} -e "\t\${MASS_MATRIX_2D_GENERATOR} ${NF} ${P} ${Q} ${EXCAFE_HEADER}"
+      ${ECHO} -e "\t\${MASS_MATRIX_2D_GENERATOR} mass_matrix ${NF} ${P} ${Q} ${EXCAFE_HEADER}"
 
       # Generate dependencies for benchmark executable
       ${ECHO} "${BENCHMARK_SOURCE}: ${BENCHMARK_TEMPLATE}"
