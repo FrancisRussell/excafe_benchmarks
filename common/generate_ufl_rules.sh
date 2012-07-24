@@ -42,14 +42,14 @@ for NF in 1 2 3 4; do
         FFC_BUILT_SOURCES="${FFC_HEADER} ${FFC_BUILT_SOURCES}"
 
         ${ECHO} "${FFC_HEADER}: ${REP_SPECIFIC_UFL_FILE}"
-        ${ECHO} -e "\tffc --optimize -r ${REPRESENTATION} --language ufc \$^" 
+        ${ECHO} -e "\t/usr/bin/time -f \"${FFC_HEADER}: %U %M\\\\n\" ffc --optimize -r ${REPRESENTATION} --language ufc \$^" 
       done
 
       # Generate Excafe headers
       EXCAFE_HEADER="${MAT_TYPE}_${OPTIONS}_excafe.h"
       EXCAFE_BUILT_SOURCES="${EXCAFE_HEADER}"
       ${ECHO} "${EXCAFE_HEADER}:"
-      ${ECHO} -e "\t\${MASS_MATRIX_2D_GENERATOR} ${MAT_TYPE} ${NF} ${P} ${Q} ${EXCAFE_HEADER}"
+      ${ECHO} -e "\t/usr/bin/time -f \"${EXCAFE_HEADER}: %U %M\\\\n\" \${MASS_MATRIX_2D_GENERATOR} ${MAT_TYPE} ${NF} ${P} ${Q} ${EXCAFE_HEADER}"
 
       # Generate dependencies for benchmark executable
       ${ECHO} "${BENCHMARK_SOURCE}: ${BENCHMARK_TEMPLATE}"
