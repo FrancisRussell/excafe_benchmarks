@@ -5,6 +5,7 @@ CLEAN_FILES=""
 INTERMEDIATES=""
 ECHO="/bin/echo"
 MAT_TYPE=${1:?}
+FIELD_RANK=${2:?}
 
 for NF in 1 2 3 4; do
   for P in 1 2 3; do
@@ -53,7 +54,7 @@ for NF in 1 2 3 4; do
 
       # Generate dependencies for benchmark executable
       ${ECHO} "${BENCHMARK_SOURCE}: ${BENCHMARK_TEMPLATE}"
-      ${ECHO} -e "\tm4 -DMAT_TYPE=${MAT_TYPE} -DNF_VALUE=${NF} -DP_VALUE=${P} -DQ_VALUE=${Q} \$^ > \$@"
+      ${ECHO} -e "\tm4 -DMAT_TYPE=${MAT_TYPE} -DNF_VALUE=${NF} -DP_VALUE=${P} -DQ_VALUE=${Q} -DFIELD_RANK=${FIELD_RANK} \$^ > \$@"
       ${ECHO} "${BENCHMARK_EXECUTABLE}: ${BENCHMARK_SOURCE} ${FFC_BUILT_SOURCES} ${EXCAFE_BUILT_SOURCES}"
       ${ECHO} -e '\t${CXX} ${CXXFLAGS} ${LDFLAGS} $< -o $@'
 

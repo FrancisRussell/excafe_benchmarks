@@ -7,7 +7,6 @@
 /mass_matrix_2d/ufl_rules.mk
 /mass_matrix_2d/benchmark_f?_p?_q?
 /mass_matrix_2d/benchmark_f?_p?_q?.cpp
-/mass_matrix_2d/mass_matrix_f?_p?_q?.cpp
 /mass_matrix_2d/mass_matrix_f?_p?_q?.ufl
 /mass_matrix_2d/mass_matrix_f?_p?_q?_tensor.ufl
 /mass_matrix_2d/mass_matrix_f?_p?_q?_quadrature.ufl
@@ -17,10 +16,18 @@
 /laplacian_2d/ufl_rules.mk
 /laplacian_2d/benchmark_f?_p?_q?
 /laplacian_2d/benchmark_f?_p?_q?.cpp
-/laplacian_2d/laplacian_f?_p?_q?.cpp
 /laplacian_2d/laplacian_f?_p?_q?.ufl
 /laplacian_2d/laplacian_f?_p?_q?_tensor.ufl
 /laplacian_2d/laplacian_f?_p?_q?_quadrature.ufl
 /laplacian_2d/laplacian_f?_p?_q?_tensor.h
 /laplacian_2d/laplacian_f?_p?_q?_quadrature.h
 /laplacian_2d/laplacian_f?_p?_q?_excafe.h
+/vector_laplacian_2d/ufl_rules.mk
+/vector_laplacian_2d/benchmark_f?_p?_q?
+/vector_laplacian_2d/benchmark_f?_p?_q?.cpp
+/vector_laplacian_2d/vector_laplacian_f?_p?_q?.ufl
+/vector_laplacian_2d/vector_laplacian_f?_p?_q?_tensor.ufl
+/vector_laplacian_2d/vector_laplacian_f?_p?_q?_quadrature.ufl
+/vector_laplacian_2d/vector_laplacian_f?_p?_q?_tensor.h
+/vector_laplacian_2d/vector_laplacian_f?_p?_q?_quadrature.h
+/vector_laplacian_2d/vector_laplacian_f?_p?_q?_excafe.h

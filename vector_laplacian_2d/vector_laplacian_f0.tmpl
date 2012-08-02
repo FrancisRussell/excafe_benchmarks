@@ -1,0 +1,6 @@
+element   = VectorElement("Lagrange", "triangle", Q_VALUE)
+
+v = TestFunction(element)
+u = TrialFunction(element)
+
+a = inner(grad(v), grad(u))*dx
