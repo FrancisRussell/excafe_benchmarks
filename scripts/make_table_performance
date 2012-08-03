@@ -9,9 +9,9 @@ trap "rm -f ${TIME_FILE}" EXIT HUP INT QUIT TERM
 FLOPS_PREFIX="Total floating point operations "
 TIME_PREFIX="Execution time "
 
-NP=3
-NQ=4
-NF=4
+NF=$(ls benchmark_f?_p?_q? | sed -r "s/.*_f(.?)_.*/\1/" | sort | uniq | wc -l)
+NP=$(ls benchmark_f?_p?_q? | sed -r "s/.*_p(.?)_.*/\1/" | sort | uniq | wc -l)
+NQ=$(ls benchmark_f?_p?_q? | sed -r "s/.*_q(.?)$/\1/" | sort | uniq | wc -l)
 
 BENCHMARK_OUTPUT="$(./${BENCHMARK_NAME}_f1_p1_q1)"
 if $(echo echo ${BENCHMARK_OUTPUT} | grep GNU > /dev/null); then
