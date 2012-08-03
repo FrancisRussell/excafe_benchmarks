@@ -46,18 +46,63 @@
 #include HEADER_EXCAFE
 
 static const ufc::shape CELL_SHAPE    = ufc::triangle;
-static const int        CELL_VERTICES = 3;
 
-int dofsPerField(const int degree)
+int getTopologicalDimension(const ufc::shape shape)
 {
-  assert(degree >= 1);
+  switch(shape)
+  {
+    case ufc::triangle: return 2;
+    case ufc::tetrahedron: return 3;
+    default:
+    {
+      assert(false && "Unsupported shape.");
+    }
+  }
+}
+
+int numVertices(const ufc::shape shape)
+{
+  switch(shape)
+  {
+    case ufc::triangle: return 3;
+    case ufc::tetrahedron: return 4;
+    default:
+    {
+      assert(false && "Unsupported shape.");
+    }
+  }
+}
+
+int power(const int x, const int y)
+{
+  assert(y >= 0);
+
+  int result = 1;
+  for(int i=0; i<y; ++i)
+    result *= x;
+
+  return result;
+}
+
+int getSpaceDimension(const int n)
+{
+  assert(n >= 1);
 
   int dofs = 0;
-  for(int m=0; m<degree+1; ++m)
-    for(int n=0; m+n<degree+1; ++n)
-      ++dofs;
+  if (CELL_SHAPE == ufc::triangle)
+  {
+    dofs = (n*n + 3*n + 2)/2;
+  }
+  else if (CELL_SHAPE == ufc::tetrahedron)
+  {
+    dofs = (n*n*n + 6*n*n + 11*n + 6)/6;
+  }
+  else
+  {
+    assert(false && "Unsupported element shape.");
+  }
 
-  return dofs;
+  return dofs * power(getTopologicalDimension(CELL_SHAPE), FIELD_RANK);
 }
 
 void checkPAPI(const int value)
@@ -211,20 +256,8 @@ private:
 
   void initCellData(const ufc::shape shape)
   {
-    switch(shape)
-    {
-      case ufc::triangle:
-      {
-        dimension = 2;
-        vertices = 3;
-        break;
-      }
-      default:
-      {
-        std::cerr << "Unimplemented cell shape." << std::endl;
-        exit(EXIT_FAILURE);
-      }
-    }
+    vertices = numVertices(shape);
+    dimension = getTopologicalDimension(shape);
 
     vertexData.reset(new double[dimension * vertices]);
     vertexPointers.reset(new double*[vertices]);
@@ -311,8 +344,8 @@ int main(int argc, char** argv)
   static const char* const childOption = "--child";
   const bool isChild = argc == 3 && strcmp(argv[1], childOption) == 0;
 
-  static const int pDofs = dofsPerField(P_VALUE);
-  static const int qDofs = dofsPerField(Q_VALUE);
+  static const int pDofs = getSpaceDimension(P_VALUE);
+  static const int qDofs = getSpaceDimension(Q_VALUE);
   static const int numProcs = 100;
   const std::size_t batchSize = 10 * 1000;
   const long operations = (1000 * 1000 * 1000)/numProcs;

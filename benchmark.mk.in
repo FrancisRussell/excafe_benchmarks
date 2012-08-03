@@ -3,7 +3,7 @@ default: tractable-benchmarks
 include ./ufl_rules.mk
 
 ufl_rules.mk: ../common/generate_ufl_rules.sh
-	./$^ ${MAT_TYPE} > $@ 
+	./$^ ${MAT_TYPE} ${FIELD_RANK} > $@ 
 
 EXCAFE_LOCATION=${HOME}/excafe
 MASS_MATRIX_2D_GENERATOR=${EXCAFE_LOCATION}/mass_matrix_generator_2d/generator

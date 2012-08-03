@@ -1,0 +1,11 @@
+element   = VectorElement("Lagrange", "triangle", Q_VALUE)
+element_f = VectorElement("Lagrange", "triangle", P_VALUE)
+
+v = TestFunction(element)
+u = TrialFunction(element)
+
+f = Coefficient(element_f)
+g = Coefficient(element_f)
+h = Coefficient(element_f)
+
+a = div(f)*div(g)*div(h)*inner(grad(v), grad(u))*dx
