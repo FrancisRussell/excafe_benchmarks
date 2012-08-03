@@ -43,7 +43,7 @@ for F in $(seq 1 ${NF}); do
 done
 echo '\\' | tee -a ${TIME_FILE}
 
-echo '\hline' | tee -a ${TIME_FILE}
+echo "\\cline{1-${NUM_COLUMNS}}" | tee -a ${TIME_FILE}
 
 for P in $(seq 1 ${NP}); do
   for Q in $(seq 1 ${NQ}); do
@@ -79,7 +79,7 @@ for P in $(seq 1 ${NP}); do
     done
     echo '\\' | tee -a ${TIME_FILE}
   done
-  echo '\hline' | tee -a ${TIME_FILE}
+  echo "\\cline{1-${NUM_COLUMNS}}" | tee -a ${TIME_FILE}
 done
 
 echo '\end{tabularx}' | tee -a ${TIME_FILE}
