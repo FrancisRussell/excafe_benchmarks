@@ -1,4 +1,6 @@
 MAT_TYPE="mass_matrix"
+FIELD_RANK="0"
+
 include ../benchmark.mk
 
 tractable-benchmarks: benchmark_f1_p1_q1 benchmark_f1_p2_q3 \
