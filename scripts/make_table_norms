@@ -2,6 +2,7 @@
 set -e
 
 BENCHMARK_NAME="benchmark"
+NORM_LIMIT="10^-10"
 NAME="$(basename $(pwd) | sed s/_//g | sed s/2/two/g)"
 trap "rm -f ${TIME_FILE}" EXIT HUP INT QUIT TERM
 
@@ -41,13 +42,21 @@ for P in $(seq 1 ${NP}); do
       BENCHMARK="./${BENCHMARK_NAME}_f${F}_p${P}_q${Q}"
       if [ -f ${BENCHMARK} ]; then
         BENCHMARK_OUTPUT="$(${BENCHMARK})"
-        E_ACCURACY=$(echo ${BENCHMARK_OUTPUT} | grep -Eo "${NORM_PREFIX} Excafe: [-0-9.e]+" | grep -Eo "[0-9.]+e-?[0-9]+")
-        T_ACCURACY=$(echo ${BENCHMARK_OUTPUT} | grep -Eo "${NORM_PREFIX} tensor: [-0-9.e]+" | grep -Eo "[0-9.]+e-?[0-9]+")
+        E_NORM=$(echo ${BENCHMARK_OUTPUT} | grep -Eo "${NORM_PREFIX} Excafe: [-0-9.e]+" | grep -Eo "[0-9.]+e-?[0-9]+")
+        T_NORM=$(echo ${BENCHMARK_OUTPUT} | grep -Eo "${NORM_PREFIX} tensor: [-0-9.e]+" | grep -Eo "[0-9.]+e-?[0-9]+")
 
-        E_ACCURACY=$(wcalc --quiet -E -P2 ${E_ACCURACY})
-        T_ACCURACY=$(wcalc --quiet -E -P2 ${T_ACCURACY})
+        E_NORM=$(wcalc -q -E -P2 ${E_NORM})
+        T_NORM=$(wcalc -q -E -P2 ${T_NORM})
 
-        echo -n "& ${E_ACCURACY} & ${T_ACCURACY} "
+        if [ $(wcalc -q "${E_NORM}>${NORM_LIMIT}") -eq 1 ]; then
+          E_NORM="\\mathbf{${E_NORM}}"
+        fi
+
+        if [ $(wcalc -q "${T_NORM}>${NORM_LIMIT}") -eq 1 ]; then
+          T_NORM="\\mathbf{${T_NORM}}"
+        fi
+
+        echo -n "& \$${E_NORM}\$ & \$${T_NORM}\$ " | sed "s/-/{-}/g"
       else
         echo -n "& - & - "
       fi
